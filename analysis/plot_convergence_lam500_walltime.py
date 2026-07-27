@@ -224,17 +224,31 @@ for label in ["L-BFGS-B", "Bayesian Opt. (exact GP)", "PSO", "ShapeEvolve"]:
 
     t = agg["time_s"]
     valid = ~np.isnan(agg["median"])
-    t, med, p25, p75, lo, hi = (t[valid], agg["median"][valid], agg["p25"][valid],
-                                agg["p75"][valid], agg["min"][valid], agg["max"][valid])
+    t, med, p25, p75, lo, hi, na = (t[valid], agg["median"][valid], agg["p25"][valid],
+                                    agg["p75"][valid], agg["min"][valid], agg["max"][valid],
+                                    agg["n_active"][valid])
     if len(t) == 0:
         continue
 
     x_max_time = max(x_max_time, t.max())
     color = COLORS[label]
     disp_label = r"PSO (120p $\times$ 500i)" if label == "PSO" else label
-    ax.fill_between(t, lo, hi, color=color, alpha=0.12)
-    ax.fill_between(t, p25, p75, color=color, alpha=0.28)
-    ax.plot(t, med, color=color, lw=1.8, label=f"{disp_label}  ({agg['n_runs']} runs)")
+
+    split_t = None
+    drop = np.where(na < na[0])[0]
+    if len(drop):
+        split_t = t[drop[0]]
+    solid_mask = t <= split_t if split_t is not None else np.ones(len(t), dtype=bool)
+    dash_mask  = t >= split_t if split_t is not None else np.zeros(len(t), dtype=bool)
+
+    ax.fill_between(t[solid_mask], lo[solid_mask], hi[solid_mask], color=color, alpha=0.12)
+    ax.fill_between(t[solid_mask], p25[solid_mask], p75[solid_mask], color=color, alpha=0.28)
+    ax.plot(t[solid_mask], med[solid_mask], color=color, lw=1.8,
+            label=f"{disp_label}  ({agg['n_runs']} runs)")
+    if dash_mask.any():
+        ax.fill_between(t[dash_mask], lo[dash_mask], hi[dash_mask], color=color, alpha=0.06)
+        ax.fill_between(t[dash_mask], p25[dash_mask], p75[dash_mask], color=color, alpha=0.15)
+        ax.plot(t[dash_mask], med[dash_mask], color=color, lw=1.8, linestyle="--")
 
 C_xf = {
     "LBFGSB": COLORS["L-BFGS-B"],
@@ -269,6 +283,7 @@ style_legend = [
     Patch(facecolor="grey", alpha=0.18, label="Min–max range"),
     Patch(facecolor="grey", alpha=0.40, label="25th–75th percentile"),
     Line2D([0], [0], color="grey", lw=1.8, label="Median best"),
+    Line2D([0], [0], color="grey", lw=1.8, linestyle="--", label="Fewer active runs"),
 ]
 leg1 = ax.legend(fontsize=8.5, loc="lower right", framealpha=0.95, title="Method")
 ax.add_artist(leg1)

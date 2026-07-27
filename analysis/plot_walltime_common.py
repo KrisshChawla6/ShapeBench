@@ -3,20 +3,15 @@
 Shared helpers for reward/objective-vs-wall-clock-time plots.
 
 APPROXIMATION NOTE: per-iteration timestamps are not logged anywhere in this
-repo (slurm .out logs only record job Start/End time, not per-eval time).
-These plots rescale each method's already-validated eval-axis trajectory by a
-single blended "mean seconds per evaluation" factor for that method, derived
-from the aggregate wall-time/eval-count tables written up in
-jguo96/ShapeEvolve_docs (cross-checked against the reported CPU-hour totals).
-This assumes uniform per-eval cost within a method, which is a reasonable
-approximation for L-BFGS-B/PSO/ShapeEvolve but understates how much slower
-Bayesian Optimization's *later* iterations are relative to its earlier ones
-(GP refit cost grows ~O(n^3) with the number of observations, per the docs).
-
-A more rigorous per-run reconstruction is possible (see
-analysis/build_walltime_index.py, which maps ~777 individual run directories
-to their true wall-clock duration from slurm logs) but was not carried
-through to a full per-run time-axis aggregation for this pass.
+repo (slurm .out logs only record job Start/End time, not per-eval time). Each
+run's OWN measured wall-clock duration is resolved from those logs
+(walltime_lookup.py / build_walltime_index.py) and used to rescale that run's
+eval axis to time — so between runs, timing is exact. WITHIN a run, time is
+still assumed uniform per evaluation (no way to do better without per-eval
+timestamps), which is a good approximation for L-BFGS-B/PSO/ShapeEvolve but
+understates how much slower Bayesian Optimization's *later* iterations are
+relative to its earlier ones (GP refit cost grows ~O(n^3) with the number of
+observations, per the docs).
 """
 
 import os
