@@ -66,7 +66,7 @@
 - **Tasks (1):** Fuel mass minimization
 
 #### CCA Drone
-- **Geometry:** CCA (Close-Coupled Actuator) drone airframe configuration
+- **Geometry:** CCA drone airframe configuration
 - **Solver:** Aerodynamic surrogate
 - **Tasks (1):** L/D ratio maximization
 
